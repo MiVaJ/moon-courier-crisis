@@ -18,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "pre-commit>=4.2,<5.0",
   "pytest>=8.4,<9.0",
   "pytest-asyncio>=1.1,<2.0",
   "ruff>=0.12,<1.0",
@@ -25,12 +26,16 @@ dev = [
 ]
 
 [tool.ruff]
-select = ["E", "F", "I", "S", "B"]
 line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "S", "B", "UP"]
+ignore = ["S101"]
 
 [tool.mypy]
 strict = true
 plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
