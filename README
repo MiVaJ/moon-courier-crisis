@@ -1,0 +1,31 @@
+
+
+
+# 🌙 Moon Courier Crisis
+
+Игровой симулятор лунной доставки, в котором игрок управляет роверами, выполняет заказы и развивает лунную базу.
+
+Проект находится в разработке.
+
+## Стек
+
+**Backend**
+
+* Python 3.11+
+* FastAPI
+* SQLAlchemy 2.0
+* PostgreSQL 16
+* Alembic
+
+**Frontend**
+
+* React 19
+* TypeScript
+* Vite
+* Phaser 3
+* Zustand
+
+**Infrastructure**
+
+* Docker
+* Docker Compose
