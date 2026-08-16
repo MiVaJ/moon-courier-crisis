@@ -30,7 +30,7 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "S", "B", "UP"]
-ignore = ["S101"]
+ignore = ["S101", "B008"]
 
 [tool.mypy]
 strict = true
