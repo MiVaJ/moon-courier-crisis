@@ -12,6 +12,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
+    "types": ["node"],
 
     "jsx": "react-jsx",
 
