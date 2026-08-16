@@ -6,29 +6,42 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.models.models import GameEvent, Order, OrderStatus, Player, Rover, RoverStatus
+from app.schemas.game import GameEventOut, OrderOut, RoverOut
 from app.services.order_generator import generate_orders
 
 router = APIRouter(prefix="/game", tags=["game"])
 
 
-@router.get("/{player_id}/rovers")
-async def get_rovers(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> list[Rover]:
+@router.get("/{player_id}/rovers", response_model=list[RoverOut])
+async def get_rovers(
+    player_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> list[RoverOut]:
     """Возвращает список роверов, принадлежащих игроку."""
     result = await db.execute(select(Rover).where(Rover.player_id == player_id))
-    return list(result.scalars().all())
+    return [RoverOut.model_validate(rover) for rover in result.scalars().all()]
 
 
-@router.get("/{player_id}/orders")
-async def get_orders(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> list[Order]:
+@router.get("/{player_id}/orders", response_model=list[OrderOut])
+async def get_orders(
+    player_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> list[OrderOut]:
     """Возвращает активные заказы игрока, ожидающие выполнения."""
     result = await db.execute(
-        select(Order).where(Order.player_id == player_id, Order.status == OrderStatus.PENDING)
+        select(Order).where(
+            Order.player_id == player_id,
+            Order.status == OrderStatus.PENDING,
+        )
     )
-    return list(result.scalars().all())
+    return [OrderOut.model_validate(order) for order in result.scalars().all()]
 
 
 @router.post("/{player_id}/orders/generate")
-async def gen_orders(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> dict[str, int]:
+async def gen_orders(
+    player_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, int]:
     """Генерирует новые заказы для игрока и сохраняет их в базе данных."""
     player = await db.get(Player, player_id)
     if not player:
@@ -41,7 +54,10 @@ async def gen_orders(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -
 
 
 @router.post("/{player_id}/next-day")
-async def next_day(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> dict[str, int]:
+async def next_day(
+    player_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, int]:
     """Переводит игрока на следующий игровой день и восстанавливает роверы."""
     player = await db.get(Player, player_id)
     if not player:
@@ -49,16 +65,22 @@ async def next_day(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> 
 
     player.day += 1
 
-    # восстановить батарею IDLE роверов на 30%
+    # восстанавливаем батарею свободных роверов на 30%.
     result = await db.execute(
-        select(Rover).where(Rover.player_id == player_id, Rover.status == RoverStatus.IDLE)
+        select(Rover).where(
+            Rover.player_id == player_id,
+            Rover.status == RoverStatus.IDLE,
+        )
     )
     for rover in result.scalars():
         rover.battery = min(100.0, rover.battery + 30.0)
 
     # разблокировать STUCK (застрявших) роверов (за штраф)
     result2 = await db.execute(
-        select(Rover).where(Rover.player_id == player_id, Rover.status == RoverStatus.STUCK)
+        select(Rover).where(
+            Rover.player_id == player_id,
+            Rover.status == RoverStatus.STUCK,
+        )
     )
     for rover in result2.scalars():
         rover.status = RoverStatus.IDLE
@@ -70,8 +92,11 @@ async def next_day(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> 
     return {"day": player.day, "money": player.money}
 
 
-@router.get("/{player_id}/events")
-async def get_events(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> list[GameEvent]:
+@router.get("/{player_id}/events", response_model=list[GameEventOut])
+async def get_events(
+    player_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> list[GameEventOut]:
     """Возвращает последние 10 игровых событий игрока."""
     result = await db.execute(
         select(GameEvent)
@@ -79,4 +104,4 @@ async def get_events(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -
         .order_by(GameEvent.created_at.desc())
         .limit(10)
     )
-    return list(result.scalars().all())
+    return [GameEventOut.model_validate(event) for event in result.scalars().all()]
