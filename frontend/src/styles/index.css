@@ -1,0 +1,49 @@
+.tutorial-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 100;
+  pointer-events: none;
+}
+.tutorial-box {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0d1117;
+  border: 1px solid #4488ff;
+  border-radius: 12px;
+  padding: 24px 32px;
+  min-width: 340px;
+  pointer-events: all;
+  box-shadow: 0 0 40px rgba(68, 136, 255, 0.3);
+}
+.tutorial-spotlight {
+  position: absolute;
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+}
+.spotlight-map {
+  inset: 0 320px 120px 0;
+}
+.spotlight-orders {
+  top: 100px;
+  right: 330px;
+  bottom: 120px;
+  left: 200px;
+}
+.spotlight-rovers {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: 310px;
+}
+.spotlight-launch {
+  bottom: 0;
+  right: 0;
+  height: 60px;
+  width: 310px;
+  top: auto;
+}
