@@ -41,3 +41,28 @@ export function HUD() {
     </div>
   )
 }
+
+export function GameOver({ onRestart }: { onRestart: () => void }) {
+  const player = useGameStore((s) => s.player)
+
+  /** Сбрасывает текущую миссию и запускает новую игру. */
+  function handleRestart() {
+    localStorage.removeItem('player_id')
+    onRestart()
+  }
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal game-over">
+        <h2>💀 Mission Failed</h2>
+        <p>Base rating dropped to zero. The lunar colony is lost.</p>
+        {player && (
+          <p>
+            Day survived: <b>{player.day}</b> · Credits earned: <b>{player.money}¢</b>
+          </p>
+        )}
+        <button onClick={handleRestart}>New Mission</button>
+      </div>
+    </div>
+  )
+}

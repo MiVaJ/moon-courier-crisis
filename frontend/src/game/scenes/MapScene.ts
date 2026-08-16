@@ -142,4 +142,36 @@ export class MapScene extends Phaser.Scene {
       },
     })
   }
+
+  /** Показывает анимацию перехода на новый игровой день. */
+  public animateDayTransition(day: number, onDone: () => void) {
+    const overlay = this.add.rectangle(450, 300, 900, 600, 0x000000, 0).setDepth(50)
+    const text = this.add
+      .text(450, 300, `DAY ${day}`, {
+        fontSize: '48px',
+        color: '#4488ff',
+        fontFamily: 'monospace',
+      })
+      .setOrigin(0.5)
+      .setDepth(51)
+      .setAlpha(0)
+
+    this.tweens.chain({
+      tweens: [
+        { targets: overlay, fillAlpha: 0.8, duration: 500 },
+        { targets: text, alpha: 1, duration: 400 },
+        { targets: text, alpha: 0, duration: 400, delay: 800 },
+        {
+          targets: overlay,
+          fillAlpha: 0,
+          duration: 500,
+          onComplete: () => {
+            overlay.destroy()
+            text.destroy()
+            onDone()
+          },
+        },
+      ],
+    })
+  }
 }
