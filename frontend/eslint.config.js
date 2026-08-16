@@ -1,9 +1,9 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
+import eslint from '@eslint/js'
+import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ["dist", "node_modules"],
+    ignores: ['dist', 'node_modules', 'eslint.config.js', 'prettier.config.js'],
   },
 
   eslint.configs.recommended,
@@ -20,10 +20,10 @@ export default tseslint.config(
   },
 
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ['**/*.{ts,tsx}'],
     rules: {
-      "@typescript-eslint/no-floating-promises": "error",
-      "@typescript-eslint/no-explicit-any": "error",
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
     },
-  },
-);
+  }
+)
