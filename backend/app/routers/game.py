@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.models.models import Order, OrderStatus, Player, Rover
+from app.models.models import GameEvent, Order, OrderStatus, Player, Rover, RoverStatus
 from app.services.order_generator import generate_orders
 
 router = APIRouter(prefix="/game", tags=["game"])
@@ -38,3 +38,45 @@ async def gen_orders(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -
         db.add(o)
     await db.commit()
     return {"generated": len(orders)}
+
+
+@router.post("/{player_id}/next-day")
+async def next_day(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> dict[str, int]:
+    """Переводит игрока на следующий игровой день и восстанавливает роверы."""
+    player = await db.get(Player, player_id)
+    if not player:
+        raise HTTPException(404)
+
+    player.day += 1
+
+    # восстановить батарею IDLE роверов на 30%
+    result = await db.execute(
+        select(Rover).where(Rover.player_id == player_id, Rover.status == RoverStatus.IDLE)
+    )
+    for rover in result.scalars():
+        rover.battery = min(100.0, rover.battery + 30.0)
+
+    # разблокировать STUCK (застрявших) роверов (за штраф)
+    result2 = await db.execute(
+        select(Rover).where(Rover.player_id == player_id, Rover.status == RoverStatus.STUCK)
+    )
+    for rover in result2.scalars():
+        rover.status = RoverStatus.IDLE
+        rover.battery = 20.0
+        rover.current_load = 0.0
+        player.money -= 100  # стоимость спасательной операции
+
+    await db.commit()
+    return {"day": player.day, "money": player.money}
+
+
+@router.get("/{player_id}/events")
+async def get_events(player_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> list[GameEvent]:
+    """Возвращает последние 10 игровых событий игрока."""
+    result = await db.execute(
+        select(GameEvent)
+        .where(GameEvent.player_id == player_id)
+        .order_by(GameEvent.created_at.desc())
+        .limit(10)
+    )
+    return list(result.scalars().all())
