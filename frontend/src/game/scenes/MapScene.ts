@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { ZONES, MAP_W, MAP_H, BASE } from '../constants'
+import { RoverSprite } from '../objects/RoverSprite'
 
 /** Создаёт генератор псевдослучайных чисел. */
 function seededRng(seed: number) {
@@ -12,6 +13,7 @@ function seededRng(seed: number) {
 
 /** Игровая сцена с картой лунной поверхности. */
 export class MapScene extends Phaser.Scene {
+  public roverSprites: Map<string, RoverSprite> = new Map()
   constructor() {
     super('MapScene')
   }
@@ -98,5 +100,46 @@ export class MapScene extends Phaser.Scene {
         .setOrigin(0.5, 0)
         .setAlpha(0.7)
     }
+  }
+
+  /** Анимирует перемещение ровера к точке доставки. */
+  public animateDelivery(
+    roverId: string,
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+    durationMs: number,
+    onComplete: () => void
+  ) {
+    const sprite = this.roverSprites.get(roverId)
+    if (!sprite) return
+
+    // Добавляем случайное отклонение маршрута.
+    const mid = {
+      x: (from.x + to.x) / 2 + (Math.random() - 0.5) * 80,
+      y: (from.y + to.y) / 2 + (Math.random() - 0.5) * 60,
+    }
+
+    // Создаём частицы пыли за движущимся ровером.
+    const particles = this.add.particles(from.x, from.y, '__DEFAULT', {
+      speed: { min: 10, max: 30 },
+      scale: { start: 0.3, end: 0 },
+      alpha: { start: 0.5, end: 0 },
+      tint: 0x888899,
+      lifespan: 400,
+      quantity: 1,
+      follow: sprite,
+    })
+
+    this.tweens.add({
+      targets: sprite,
+      x: { value: [from.x, mid.x, to.x] },
+      y: { value: [from.y, mid.y, to.y] },
+      duration: durationMs,
+      ease: 'Linear',
+      onComplete: () => {
+        particles.destroy()
+        onComplete() // просто сигнал "анимация завершена"
+      },
+    })
   }
 }
