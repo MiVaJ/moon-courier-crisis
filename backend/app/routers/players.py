@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_db
 from app.models.models import Player, Rover
 from app.schemas.player import PlayerCreate, PlayerOut
+from app.services.order_generator import generate_orders
 
 router = APIRouter(prefix="/players", tags=["players"])
 
@@ -29,6 +30,9 @@ async def create_player(data: PlayerCreate, db: AsyncSession = Depends(get_db)) 
 
     for r in STARTER_ROVERS:
         db.add(Rover(player_id=player.id, **r))
+
+    for order in generate_orders(player.id, count=5):
+        db.add(order)
 
     await db.commit()
     await db.refresh(player)
