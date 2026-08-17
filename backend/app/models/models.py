@@ -214,11 +214,11 @@ class Delivery(Base):
         nullable=False,
     )
     started_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
     )
     eta: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
     )
     success: Mapped[bool | None] = mapped_column(
@@ -266,7 +266,7 @@ class GameEvent(Base):
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
     )
     player: Mapped["Player"] = relationship(

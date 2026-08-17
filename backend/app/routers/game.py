@@ -1,12 +1,14 @@
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.models.models import GameEvent, Order, OrderStatus, Player, Rover, RoverStatus
+from app.models.models import Delivery, GameEvent, Order, OrderStatus, Player, Rover, RoverStatus
 from app.schemas.game import GameEventOut, OrderOut, RoverOut
+from app.services.delivery import calc_success, required_battery
 from app.services.order_generator import generate_orders
 
 router = APIRouter(prefix="/game", tags=["game"])
@@ -105,3 +107,54 @@ async def get_events(
         .limit(10)
     )
     return [GameEventOut.model_validate(event) for event in result.scalars().all()]
+
+
+@router.post("/{player_id}/resolve-pending")
+async def resolve_pending(
+    player_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, int]:
+    """Резолвит все просроченные доставки игрока после перезагрузки."""
+    result = await db.execute(
+        select(Delivery)
+        .join(Rover, Delivery.rover_id == Rover.id)
+        .where(
+            Rover.player_id == player_id,
+            Delivery.success.is_(None),
+            Delivery.eta <= datetime.now(UTC),
+        )
+    )
+    deliveries = result.scalars().all()
+
+    player = await db.get(Player, player_id)
+    if not player:
+        raise HTTPException(404)
+
+    for delivery in deliveries:
+        rover = await db.get(Rover, delivery.rover_id)
+        order = await db.get(Order, delivery.order_id)
+        if not rover or not order:
+            continue
+
+        success = calc_success(order)
+        battery_cost = required_battery(rover, order)
+
+        if success:
+            player.money += order.reward * order.urgency
+            order.status = OrderStatus.DELIVERED
+            rover.battery = max(0.0, rover.battery - battery_cost)
+            rover.status = RoverStatus.IDLE
+            rover.current_load -= order.weight
+            rover.pos_x = order.to_x
+            rover.pos_y = order.to_y
+            player.rating = min(100.0, player.rating + 2.0)
+        else:
+            order.status = OrderStatus.FAILED
+            rover.status = RoverStatus.STUCK
+            rover.battery = max(0.0, rover.battery - battery_cost * 1.5)
+            player.rating = max(0.0, player.rating - 10.0)
+
+        delivery.success = success
+
+    await db.commit()
+    return {"resolved": len(deliveries)}
