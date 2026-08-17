@@ -2,8 +2,8 @@ import math
 
 from app.models.models import Order, Rover, RoverStatus
 
-PIXEL_TO_KM = 0.1
-MAX_BATTERY_DISTANCE = 80.0  # км на полном заряде без груза
+PIXEL_TO_KM = 0.01
+MAX_BATTERY_DISTANCE = 8.0  # км на полном заряде без груза
 
 
 def distance_km(rover: Rover, order: Order) -> float:
@@ -28,7 +28,7 @@ def delivery_time_seconds(rover: Rover, order: Order) -> int:
     base_speed = 30.0  # км/ч
     actual_speed = base_speed / (1 + weight_ratio * 0.4)
     hours = dist / actual_speed
-    return max(5, int(hours * 3600))  # минимум 5 секунд для UX
+    return max(3, int(hours * 60))  # минимум 3 секунд для UX
 
 
 def can_deliver(rover: Rover, order: Order) -> tuple[bool, str]:
