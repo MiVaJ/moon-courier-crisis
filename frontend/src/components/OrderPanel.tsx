@@ -10,7 +10,19 @@ export function OrderPanel() {
   async function handleSend() {
     if (!canSend || !player) return
     try {
+      if (!canSend || !player) return
+      const scene = useGameStore.getState().scene
       const delivery = await startDelivery(selectedRover.id, selectedOrder.id)
+
+      // запускаем анимацию
+      scene?.animateDelivery(
+        selectedRover.id,
+        { x: selectedRover.pos_x, y: selectedRover.pos_y },
+        { x: selectedOrder.to_x, y: selectedOrder.to_y },
+        delivery.eta_seconds * 1000,
+        () => console.log('animation done')
+      )
+
       // ожидаем завершения доставки перед разрешением результата
       setTimeout(async () => {
         await resolveDelivery(delivery.id)

@@ -139,6 +139,13 @@ export class MapScene extends Phaser.Scene {
     const sprite = this.roverSprites.get(roverId)
     if (!sprite) return
 
+    const STOP_OFFSET = 25
+    const angle = Math.atan2(to.y - from.y, to.x - from.x)
+    // Добавляем остановку ровера перед точкой доставки.
+    const adjustedTo = {
+      x: to.x - Math.cos(angle) * STOP_OFFSET,
+      y: to.y - Math.sin(angle) * STOP_OFFSET,
+    }
     // Добавляем случайное отклонение маршрута.
     const mid = {
       x: (from.x + to.x) / 2 + (Math.random() - 0.5) * 80,
@@ -158,8 +165,8 @@ export class MapScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: sprite,
-      x: { value: [from.x, mid.x, to.x] },
-      y: { value: [from.y, mid.y, to.y] },
+      x: { value: [from.x, mid.x, adjustedTo.x] },
+      y: { value: [from.y, mid.y, adjustedTo.y] },
       duration: durationMs,
       ease: 'Linear',
       onComplete: () => {
