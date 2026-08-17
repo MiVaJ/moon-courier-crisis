@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { ZONES, MAP_W, MAP_H, BASE } from '../constants'
 import { RoverSprite } from '../objects/RoverSprite'
+import { useGameStore } from '@/store/gameStore'
 
 /** Создаёт генератор псевдослучайных чисел. */
 function seededRng(seed: number) {
@@ -24,6 +25,8 @@ export class MapScene extends Phaser.Scene {
     this.drawCraters()
     this.drawBase()
     this.drawZoneLabels()
+
+    useGameStore.getState().setScene(this)
   }
 
   /** Отрисовывает зоны карты с различным уровнем риска. */

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { MapScene } from '@/game/scenes/MapScene'
 
 /** Данные ровера, необходимые для отображения и управления им в игре. */
 export interface RoverData {
@@ -54,6 +55,8 @@ interface GameStore {
   events: EventData[]
   selectedOrder: OrderData | null
   selectedRover: RoverData | null
+  scene: MapScene | null
+  setScene: (s: MapScene | null) => void
   setPlayer: (p: PlayerData) => void
   setRovers: (r: RoverData[]) => void
   setOrders: (o: OrderData[]) => void
@@ -71,6 +74,8 @@ export const useGameStore = create<GameStore>((set) => ({
   events: [],
   selectedOrder: null,
   selectedRover: null,
+  scene: null,
+  setScene: (s) => set({ scene: s }),
   setPlayer: (p) => set({ player: p }),
   setRovers: (r) => set({ rovers: r }),
   setOrders: (o) => set({ orders: o }),
