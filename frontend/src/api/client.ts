@@ -3,6 +3,24 @@ import type { PlayerData, RoverData, OrderData, EventData } from '@/store/gameSt
 
 const api = axios.create({ baseURL: 'http://localhost:8000' })
 
+interface GenerateOrdersResponse {
+  generated: number
+}
+
+interface DeliveryResponse {
+  id: string
+  eta_seconds: number
+}
+
+interface ResolveDeliveryResponse {
+  success: boolean
+}
+
+interface NextDayResponse {
+  day: number
+  money: number
+}
+
 /** Создаёт нового игрока по указанному имени. */
 export const createPlayer = (nickname: string) =>
   api.post<PlayerData>('/players/', { nickname }).then((r) => r.data)
@@ -24,19 +42,24 @@ export const getOrders = (playerId: string) =>
 
 /** Генерирует новые заказы для игрока. */
 export const generateOrders = (playerId: string) =>
-  api.post(`/game/${playerId}/orders/generate`).then((r) => r.data)
+  api.post<GenerateOrdersResponse>(`/game/${playerId}/orders/generate`).then((r) => r.data)
 
 /** Запускает доставку заказа выбранным ровером. */
 export const startDelivery = (roverId: string, orderId: string) =>
-  api.post('/deliveries/', { rover_id: roverId, order_id: orderId }).then((r) => r.data)
+  api
+    .post<DeliveryResponse>('/deliveries/', {
+      rover_id: roverId,
+      order_id: orderId,
+    })
+    .then((r) => r.data)
 
 /** Завершает доставку и получает результат выполнения заказа. */
 export const resolveDelivery = (deliveryId: string) =>
-  api.post(`/deliveries/${deliveryId}/resolve`).then((r) => r.data)
+  api.post<ResolveDeliveryResponse>(`/deliveries/${deliveryId}/resolve`).then((r) => r.data)
 
 /** Переводит игрока на следующий игровой день. */
 export const nextDay = (playerId: string) =>
-  api.post(`/game/${playerId}/next-day`).then((r) => r.data)
+  api.post<NextDayResponse>(`/game/${playerId}/next-day`).then((r) => r.data)
 
 /** Получает последние игровые события игрока. */
 export const getEvents = (playerId: string) =>

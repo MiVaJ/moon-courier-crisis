@@ -10,7 +10,6 @@ export function OrderPanel() {
   async function handleSend() {
     if (!canSend || !player) return
     try {
-      if (!canSend || !player) return
       const scene = useGameStore.getState().scene
       const delivery = await startDelivery(selectedRover.id, selectedOrder.id)
 
@@ -24,8 +23,8 @@ export function OrderPanel() {
       )
 
       // ожидаем завершения доставки перед разрешением результата
-      setTimeout(async () => {
-        await resolveDelivery(delivery.id)
+      setTimeout(() => {
+        void resolveDelivery(delivery.id)
         // обновление состояния через polling или событие
       }, delivery.eta_seconds * 1000)
     } catch (e: unknown) {

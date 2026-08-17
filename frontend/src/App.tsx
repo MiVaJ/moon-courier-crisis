@@ -18,12 +18,17 @@ export function App() {
   useDeliveryPoller()
 
   useEffect(() => {
-    initSession().then((restored) => {
-      setLoading(false)
-      if (restored && !useGameStore.getState().player?.tutorial_done) {
-        setShowTutorial(true)
-      }
-    })
+    void initSession()
+      .then((restored) => {
+        setLoading(false)
+
+        if (restored && !useGameStore.getState().player?.tutorial_done) {
+          setShowTutorial(true)
+        }
+      })
+      .catch(() => {
+        setLoading(false)
+      })
   }, [])
 
   if (loading) return <div className="loading">Loading...</div>

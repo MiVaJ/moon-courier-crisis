@@ -9,7 +9,7 @@ export function useDeliveryPoller() {
   useEffect(() => {
     if (!player) return
 
-    const id = setInterval(async () => {
+    const updateGame = async () => {
       const [rovers, orders, events, p] = await Promise.all([
         getRovers(player.id),
         getOrders(player.id),
@@ -21,6 +21,10 @@ export function useDeliveryPoller() {
       setOrders(orders)
       setEvents(events)
       setPlayer(p)
+    }
+
+    const id = setInterval(() => {
+      void updateGame()
     }, 3000)
 
     return () => clearInterval(id)
