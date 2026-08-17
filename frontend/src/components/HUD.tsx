@@ -18,10 +18,12 @@ export function HUD() {
     const rovers = await getRovers(currentPlayer.id)
     setRovers(rovers)
 
-    // Генерируем и загружаем новые заказы.
-    await generateOrders(currentPlayer.id)
+    // Генерируем и загружаем новые заказы только если их мало.
     const orders = await getOrders(currentPlayer.id)
-    setOrders(orders)
+    if (orders.filter((o) => o.status === 'pending').length < 5) {
+      await generateOrders(currentPlayer.id)
+    }
+    setOrders(await getOrders(currentPlayer.id))
   }
 
   return (
