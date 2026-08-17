@@ -2,6 +2,8 @@ import Phaser from 'phaser'
 import { ZONES, MAP_W, MAP_H, BASE } from '../constants'
 import { RoverSprite } from '../objects/RoverSprite'
 import { useGameStore } from '@/store/gameStore'
+import type { RoverData, OrderData } from '@/store/gameStore'
+import { OrderMarker } from '../objects/OrderMarker'
 
 /** Создаёт генератор псевдослучайных чисел. */
 function seededRng(seed: number) {
@@ -105,6 +107,27 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
+  private orderMarkers: Map<string, OrderMarker> = new Map()
+
+  public initOrders(orders: OrderData[], onSelect: (o: OrderData) => void) {
+    const pendingIds = new Set(orders.filter((o) => o.status === 'pending').map((o) => o.id))
+
+    // удаляем маркеры которых нет в новом списке
+    this.orderMarkers.forEach((marker, id) => {
+      if (!pendingIds.has(id)) {
+        marker.destroy()
+        this.orderMarkers.delete(id)
+      }
+    })
+
+    // добавляем только новые
+    for (const order of orders.filter((o) => o.status === 'pending')) {
+      if (this.orderMarkers.has(order.id)) continue
+      const marker = new OrderMarker(this, order, onSelect)
+      this.orderMarkers.set(order.id, marker)
+    }
+  }
+
   /** Анимирует перемещение ровера к точке доставки. */
   public animateDelivery(
     roverId: string,
@@ -176,5 +199,20 @@ export class MapScene extends Phaser.Scene {
         },
       ],
     })
+  }
+
+  /** Инициализирует спрайты роверов на карте. */
+  public initRovers(rovers: RoverData[]) {
+    for (const rover of rovers) {
+      if (this.roverSprites.has(rover.id)) {
+        const sprite = this.roverSprites.get(rover.id)!
+        sprite.updateBattery(rover.battery)
+        continue
+      }
+      const sprite = new RoverSprite(this, rover, (r) => {
+        useGameStore.getState().selectRover(r)
+      })
+      this.roverSprites.set(rover.id, sprite)
+    }
   }
 }
