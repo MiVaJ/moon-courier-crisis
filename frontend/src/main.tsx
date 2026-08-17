@@ -1,5 +1,8 @@
 import { getPlayer, getRovers, getOrders, generateOrders } from '@/api/client'
 import { useGameStore } from '@/store/gameStore'
+import ReactDOM from 'react-dom/client'
+import { App } from './App'
+import axios from 'axios'
 
 /** Восстанавливает игровую сессию из сохранённого идентификатора игрока. */
 export async function initSession() {
@@ -10,6 +13,9 @@ export async function initSession() {
     try {
       const player = await getPlayer(savedId)
       store.setPlayer(player)
+
+      // резолвим просроченные доставки после перезагрузки
+      await axios.post(`http://localhost:8000/game/${savedId}/resolve-pending`)
 
       const [rovers, orders] = await Promise.all([getRovers(savedId), getOrders(savedId)])
 
@@ -30,3 +36,5 @@ export async function initSession() {
 
   return false // Сохранённой сессии нет.
 }
+
+ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
